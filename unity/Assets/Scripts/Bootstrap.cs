@@ -94,7 +94,7 @@ namespace LastSon
             ConfigureRuntime();
         }
 
-        /// <summary>Spawn the LAN multiplayer manager and its lobby menu once.</summary>
+        /// <summary>Spawn the multiplayer manager and its lobby menu once.</summary>
         private static void EnsureMultiplayer()
         {
             if (Object.FindFirstObjectByType<LanMultiplayer>() != null) return;

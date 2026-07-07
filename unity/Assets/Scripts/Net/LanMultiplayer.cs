@@ -27,11 +27,10 @@ namespace LastSon
     }
 
     /// <summary>
-    /// Basic multiplayer manager. LAN mode uses raw UDP on the same Wi-Fi.
-    /// Online mode uses the sibling Node relay server over newline-delimited
-    /// TCP JSON so players can host/join by room code over the internet.
-    /// Remote players are rendered as lightweight <see cref="RemotePlayer"/>
-    /// ghosts.
+    /// Basic multiplayer manager. The player-facing flow uses the sibling Node
+    /// relay server over newline-delimited TCP JSON so players can host/join by
+    /// room code over the internet. Remote players are rendered as lightweight
+    /// <see cref="RemotePlayer"/> ghosts.
     /// </summary>
     public class LanMultiplayer : MonoBehaviour
     {
@@ -48,7 +47,7 @@ namespace LastSon
         public const string DefaultRelayAddress = "hayabusa.proxy.rlwy.net:53046";
 
         public NetRole Role { get; private set; } = NetRole.Offline;
-        public NetTransport Transport { get; private set; } = NetTransport.Lan;
+        public NetTransport Transport { get; private set; } = NetTransport.Online;
         public string LocalName = "Kryptonian";
         public string StatusText { get; private set; } = "";
         public IReadOnlyList<LobbyInfo> Lobbies => lobbyList;
