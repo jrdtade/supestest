@@ -40,11 +40,32 @@ namespace LastSon
             cc = GetComponent<CharacterController>();
             lastYaw = transform.eulerAngles.y;
 
+            ClearTrailChildren(rig.handL);
+            ClearTrailChildren(rig.handR);
+            ClearTrailChildren(rig.bootL);
+            ClearTrailChildren(rig.bootR);
+
             trails = new TrailRenderer[4];
             trails[0] = MakeTrail(rig.handL, -0.09f);   // at the fists
             trails[1] = MakeTrail(rig.handR, -0.09f);
             trails[2] = MakeTrail(rig.bootL, -0.46f);   // at the boot soles
             trails[3] = MakeTrail(rig.bootR, -0.46f);
+        }
+
+        private static void ClearTrailChildren(Transform parent)
+        {
+            if (parent == null) return;
+
+            for (int i = parent.childCount - 1; i >= 0; i--)
+            {
+                Transform child = parent.GetChild(i);
+                if (child.GetComponent<TrailRenderer>() == null) continue;
+
+                if (Application.isPlaying)
+                    Destroy(child.gameObject);
+                else
+                    DestroyImmediate(child.gameObject);
+            }
         }
 
         private TrailRenderer MakeTrail(Transform parent, float yOffset)
@@ -86,7 +107,22 @@ namespace LastSon
             float iy = 0f;
             if (Input.GetKey(KeyCode.Space)) iy += 1f;
             if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.C)) iy -= 1f;
-            Boosting = Input.GetKey(KeyCode.LeftShift) && (Mathf.Abs(ix) + Mathf.Abs(iz) + Mathf.Abs(iy) > 0.1f);
+            bool boostHeld = Input.GetKey(KeyCode.LeftShift);
+            bool takeOff = Input.GetKeyDown(KeyCode.Space);
+
+            // Blend in on-screen touch controls (mobile). Additive so an attached
+            // keyboard still works during development.
+            if (TouchControls.UsingTouch)
+            {
+                Vector2 m = TouchControls.MoveAxis;
+                ix = Mathf.Clamp(ix + m.x, -1f, 1f);
+                iz = Mathf.Clamp(iz + m.y, -1f, 1f);
+                iy = Mathf.Clamp(iy + TouchControls.VerticalAxis, -1f, 1f);
+                boostHeld |= TouchControls.Boost;
+                takeOff |= TouchControls.AscendPressed;
+            }
+
+            Boosting = boostHeld && (Mathf.Abs(ix) + Mathf.Abs(iz) + Mathf.Abs(iy) > 0.1f);
 
             // Camera-relative wish direction. While airborne, W follows the
             // camera's full 3D aim so you dive and climb by looking.
@@ -140,7 +176,7 @@ namespace LastSon
             if (grounded)
             {
                 yVel -= GRAVITY * dt;
-                if (Input.GetKeyDown(KeyCode.Space)) { yVel = 0f; grounded = false; }
+                if (takeOff) { yVel = 0f; grounded = false; }
                 else velocity.y = yVel;
             }
 

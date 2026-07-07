@@ -83,9 +83,14 @@ namespace LastSon
             mesh.triangles = tris;
             mesh.MarkDynamic();
 
-            var mf = gameObject.AddComponent<MeshFilter>();
+            var mf = GetComponent<MeshFilter>();
+            if (mf == null)
+                mf = gameObject.AddComponent<MeshFilter>();
             mf.sharedMesh = mesh;
-            var mr = gameObject.AddComponent<MeshRenderer>();
+
+            var mr = GetComponent<MeshRenderer>();
+            if (mr == null)
+                mr = gameObject.AddComponent<MeshRenderer>();
             mr.sharedMaterial = mat;
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
         }

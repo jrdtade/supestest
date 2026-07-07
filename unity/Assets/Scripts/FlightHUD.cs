@@ -59,15 +59,30 @@ namespace LastSon
 
             if (showHelp)
             {
-                GUI.DrawTexture(new Rect(14, Screen.height - 168, 320, 154), panelTex);
-                float y = Screen.height - 160;
-                GUI.Label(new Rect(26, y, 320, 20), "MOUSE - look / steer", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "W A S D - fly (W follows your aim)", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "SPACE / CTRL - ascend / descend", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "HOLD SHIFT - super-speed", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "SPACE near ground - take off / land", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "H - toggle help   ESC - release mouse", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "Fan prototype - personal use only", help);
+                if (TouchControls.UsingTouch)
+                {
+                    // Top-left so the card clears the joystick and buttons.
+                    GUI.DrawTexture(new Rect(14, 108, 340, 134), panelTex);
+                    float y = 116;
+                    GUI.Label(new Rect(26, y, 340, 20), "LEFT STICK - fly (up follows your aim)", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "DRAG RIGHT - look / steer", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "▲ / ▼ - ascend / descend", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "BOOST - super-speed", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "▲ near ground - take off", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "Fan prototype - personal use only", help);
+                }
+                else
+                {
+                    GUI.DrawTexture(new Rect(14, Screen.height - 168, 320, 154), panelTex);
+                    float y = Screen.height - 160;
+                    GUI.Label(new Rect(26, y, 320, 20), "MOUSE - look / steer", help); y += 20;
+                    GUI.Label(new Rect(26, y, 320, 20), "W A S D - fly (W follows your aim)", help); y += 20;
+                    GUI.Label(new Rect(26, y, 320, 20), "SPACE / CTRL - ascend / descend", help); y += 20;
+                    GUI.Label(new Rect(26, y, 320, 20), "HOLD SHIFT - super-speed", help); y += 20;
+                    GUI.Label(new Rect(26, y, 320, 20), "SPACE near ground - take off / land", help); y += 20;
+                    GUI.Label(new Rect(26, y, 320, 20), "H - toggle help   ESC - release mouse", help); y += 20;
+                    GUI.Label(new Rect(26, y, 320, 20), "Fan prototype - personal use only", help);
+                }
             }
         }
     }
