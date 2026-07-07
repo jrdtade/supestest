@@ -113,19 +113,35 @@ namespace LastSon
 
             if (showHelp)
             {
-                GUI.DrawTexture(new Rect(14, Screen.height - 248, 360, 234), panelTex);
-                float y = Screen.height - 240;
-                GUI.Label(new Rect(26, y, 360, 20), "MOUSE - look / steer", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "W A S D - move (airborne: W follows your aim)", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "SPACE / CTRL - up / down · SPACE - take off", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "SHIFT - boost (air) / super sprint (ground)", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "LMB - punch    RMB - kick   (chain combos!)", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "   P-P-P haymaker · P-P-K launcher · K-K spin", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "Q (hold) - heat vision at the crosshair", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "F (hold) - freeze breath · punch ice to shatter", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "X - x-ray vision    E - grab / set down props", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "H - toggle help · ESC - release mouse", help); y += 20;
-                GUI.Label(new Rect(26, y, 360, 20), "Fan prototype - personal use only", help);
+                if (TouchControls.UsingTouch)
+                {
+                    // Top-left so the card clears the joystick and buttons.
+                    GUI.DrawTexture(new Rect(14, 108, 340, 174), panelTex);
+                    float y = 116;
+                    GUI.Label(new Rect(26, y, 340, 20), "LEFT STICK - fly (up follows your aim)", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "DRAG RIGHT - look / steer", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "▲ / ▼ - ascend / descend", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "BOOST - super-speed / super-sprint", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "▲ near ground - take off", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "(powers & combat need keyboard/mouse for now)", help); y += 20;
+                    GUI.Label(new Rect(26, y, 340, 20), "Fan prototype - personal use only", help);
+                }
+                else
+                {
+                    GUI.DrawTexture(new Rect(14, Screen.height - 248, 360, 234), panelTex);
+                    float y = Screen.height - 240;
+                    GUI.Label(new Rect(26, y, 360, 20), "MOUSE - look / steer", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "W A S D - move (airborne: W follows your aim)", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "SPACE / CTRL - up / down · SPACE - take off", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "SHIFT - boost (air) / super sprint (ground)", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "LMB - punch    RMB - kick   (chain combos!)", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "   P-P-P haymaker · P-P-K launcher · K-K spin", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "Q (hold) - heat vision at the crosshair", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "F (hold) - freeze breath · punch ice to shatter", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "X - x-ray vision    E - grab / set down props", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "H - toggle help · ESC - release mouse", help); y += 20;
+                    GUI.Label(new Rect(26, y, 360, 20), "Fan prototype - personal use only", help);
+                }
             }
         }
     }

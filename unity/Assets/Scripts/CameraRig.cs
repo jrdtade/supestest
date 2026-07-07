@@ -29,8 +29,11 @@ namespace LastSon
             target = followTarget;
             controller = fc;
             cam = GetComponent<Camera>();
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            if (!Application.isMobilePlatform)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
 
         public void Kick(float amount)
@@ -43,23 +46,36 @@ namespace LastSon
             if (target == null) return;
             float dt = Time.deltaTime;
 
-            // Cursor capture toggling.
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (TouchControls.UsingTouch)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
-            if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
-
-            if (Cursor.lockState == CursorLockMode.Locked)
-            {
-                yaw += Input.GetAxis("Mouse X") * SENS;
-                pitch -= Input.GetAxis("Mouse Y") * SENS;
+                // Right-side drag steers the camera; resolution-independent so a
+                // full-height swipe rotates a fixed number of degrees.
+                Vector2 ld = TouchControls.LookDelta;
+                float px2deg = 150f / Mathf.Max(Screen.height, 1);
+                yaw += ld.x * px2deg;
+                pitch -= ld.y * px2deg;
                 pitch = Mathf.Clamp(pitch, -65f, 78f);
+            }
+            else
+            {
+                // Cursor capture toggling.
+                if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+                if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
+
+                if (Cursor.lockState == CursorLockMode.Locked)
+                {
+                    yaw += Input.GetAxis("Mouse X") * SENS;
+                    pitch -= Input.GetAxis("Mouse Y") * SENS;
+                    pitch = Mathf.Clamp(pitch, -65f, 78f);
+                }
             }
 
             float speedT = Mathf.Clamp01(controller.Speed / 120f);
