@@ -1,9 +1,12 @@
 *.iml
 .gradle/
+.kotlin/
 local.properties
 .idea/
+.vscode/
 .DS_Store
 build/
+out/
 captures/
 .externalNativeBuild/
 .cxx/
