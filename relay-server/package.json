@@ -1,0 +1,13 @@
+{
+  "name": "lastson-relay",
+  "version": "1.0.0",
+  "description": "Zero-dependency TCP relay server for LastSon online multiplayer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-relay.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

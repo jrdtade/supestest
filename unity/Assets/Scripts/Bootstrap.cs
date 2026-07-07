@@ -87,9 +87,20 @@ namespace LastSon
             hud.powers = powers;
             hud.combat = combat;
 
+            EnsureMultiplayer();
+
             SpawnTestRange();
 
             ConfigureRuntime();
+        }
+
+        /// <summary>Spawn the LAN multiplayer manager and its lobby menu once.</summary>
+        private static void EnsureMultiplayer()
+        {
+            if (Object.FindFirstObjectByType<LanMultiplayer>() != null) return;
+            var netGO = new GameObject("Multiplayer");
+            var mp = netGO.AddComponent<LanMultiplayer>();
+            netGO.AddComponent<NetworkMenu>().net = mp;
         }
 
         private static void ConfigureRuntime()
@@ -160,6 +171,8 @@ namespace LastSon
             hud.controller = fc;
             hud.powers = powers;
             hud.combat = combat;
+
+            EnsureMultiplayer();
 
             // Registry lists don't survive a scene save; rebuild them.
             RebuildRegistryFromScene();

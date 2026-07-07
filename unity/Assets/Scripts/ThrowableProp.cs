@@ -36,7 +36,7 @@ namespace LastSon
             transform.SetParent(null, true);
             rb.isKinematic = false;
             foreach (var c in cols) c.enabled = true;
-            rb.velocity = velocity;
+            rb.linearVelocity = velocity;
             rb.angularVelocity = Random.onUnitSphere * 3f;
             thrownT = 4f;
             ignoreOwnerT = 0.4f;
@@ -49,7 +49,7 @@ namespace LastSon
             transform.SetParent(null, true);
             rb.isKinematic = false;
             foreach (var c in cols) c.enabled = true;
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             ignoreOwnerT = 0.3f;
         }
 
@@ -191,7 +191,7 @@ namespace LastSon
         {
             var rb = go.AddComponent<Rigidbody>();
             rb.mass = mass;
-            rb.angularDrag = 0.6f;
+            rb.angularDamping = 0.6f;
 
             var prop = go.AddComponent<ThrowableProp>();
             prop.maxHp = hp;
