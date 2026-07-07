@@ -24,3 +24,5 @@ sysinfo.txt
 .vs/
 .idea/
 .vscode/
+.agents/
+skills-lock.json

@@ -4,6 +4,8 @@
 local.properties
 .idea/
 .vscode/
+.agents/
+skills-lock.json
 .DS_Store
 build/
 out/
