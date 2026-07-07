@@ -5,6 +5,9 @@ namespace LastSon
     /// <summary>
     /// Builds the entire scene from code the moment Play starts - open any
     /// empty scene and press Play; no prefabs, assets, or scene wiring needed.
+    /// Spawns Superman on foot in the middle of a test range: training
+    /// robots, pedestrians, parked cars, crates, and fuel tankers, all
+    /// reactive to every power.
     /// </summary>
     public static class Bootstrap
     {
@@ -13,21 +16,21 @@ namespace LastSon
         {
             if (Object.FindObjectOfType<FlightController>() != null) return;
 
+            Registry.Clear();
             SetupLightingAndSky();
 
             var cityRoot = new GameObject("Metropolis");
             CityGenerator.Build(cityRoot.transform);
 
-            // --- Superman -------------------------------------------------
+            // --- Superman: starts on foot at a street intersection -----------
             var super = new GameObject("Superman");
-            // Above a street intersection (roads run on the +/-45 + 90k lines),
-            // guaranteed clear of building geometry.
-            super.transform.position = new Vector3(-135f, 60f, -225f);
+            super.transform.position = new Vector3(-135f, 0.4f, -225f);
             var cc = super.AddComponent<CharacterController>();
             cc.height = 1.95f;
             cc.radius = 0.42f;
             cc.center = new Vector3(0f, 1.0f, 0f);
             cc.slopeLimit = 60f;
+            Registry.Player = super.transform;
 
             SupermanRig rig = SupermanModel.Build(super.transform);
 
@@ -39,24 +42,89 @@ namespace LastSon
             cam.farClipPlane = 4000f;
             camGO.AddComponent<AudioListener>();
             var camRig = camGO.AddComponent<CameraRig>();
+            Registry.Cam = camRig;
 
             var fc = super.AddComponent<FlightController>();
             fc.Init(rig, camRig);
             camRig.Init(super.transform, fc);
 
-            var anim = super.AddComponent<SupermanAnimator>();
-            anim.Init(rig, fc);
+            var powers = super.AddComponent<PowersController>();
+            powers.Init(fc, rig, cam);
 
-            // Aim the camera at the skyline on spawn.
+            var combat = super.AddComponent<CombatSystem>();
+            combat.Init(fc, rig, powers);
+            fc.combat = combat;
+
+            var anim = super.AddComponent<SupermanAnimator>();
+            anim.Init(rig, fc, combat);
+
             camGO.transform.position = super.transform.position + new Vector3(0f, 2.5f, -6f);
             camGO.transform.LookAt(super.transform.position + Vector3.up * 1.4f);
 
             // --- HUD ---------------------------------------------------------
             var hud = new GameObject("HUD").AddComponent<FlightHUD>();
             hud.controller = fc;
+            hud.powers = powers;
+            hud.combat = combat;
+
+            SpawnTestRange();
 
             Application.targetFrameRate = -1;
             QualitySettings.vSyncCount = 1;
+        }
+
+        /// <summary>
+        /// The playground around the spawn intersection. Roads run along the
+        /// x = -135 and z = -225 lines (each ~20 m wide), so everything is
+        /// placed on the pavement, clear of building footprints.
+        /// </summary>
+        private static void SpawnTestRange()
+        {
+            // Training robots: a firing-line ahead of spawn plus a patrol group.
+            for (int i = 0; i < 6; i++)
+            {
+                float x = (i % 2 == 0) ? -140f : -130f;
+                RobotNPC.Spawn(new Vector3(x, 0f, -210f + i * 4f));
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                RobotNPC.Spawn(new Vector3(-135f + Random.Range(-5f, 5f), 0f, -168f + i * 6f));
+            }
+
+            // Pedestrians along both streets.
+            for (int i = 0; i < 10; i++)
+            {
+                var civ = CivilianNPC.Spawn(new Vector3(
+                    Random.Range(-140f, -130f), 0f, Random.Range(-272f, -238f)));
+                civ.wanderAxis = new Vector3(0.3f, 0f, 1f);
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                var civ = CivilianNPC.Spawn(new Vector3(
+                    Random.Range(-195f, -150f), 0f, Random.Range(-230f, -220f)));
+                civ.wanderAxis = new Vector3(1f, 0f, 0.3f);
+            }
+
+            // Parked cars: a rank south of spawn and one on the cross street.
+            for (int i = 0; i < 6; i++)
+            {
+                PropFactory.Car(new Vector3(-128.5f, 0.05f, -244f - i * 9f), 0f);
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                PropFactory.Car(new Vector3(-160f - i * 12f, 0.05f, -231.5f), 90f);
+            }
+
+            // Crates to punt around, next to the intersection.
+            for (int i = 0; i < 6; i++)
+            {
+                PropFactory.Crate(new Vector3(
+                    -131f + Random.Range(-3f, 3f), 0.05f, -231f + Random.Range(-3f, 3f)));
+            }
+
+            // Fuel tankers: the fireworks.
+            PropFactory.Tanker(new Vector3(-135.5f, 0.05f, -165f), 0f);
+            PropFactory.Tanker(new Vector3(-192f, 0.05f, -228f), 90f);
         }
 
         private static void SetupLightingAndSky()

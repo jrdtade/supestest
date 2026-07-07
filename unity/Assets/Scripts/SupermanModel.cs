@@ -14,6 +14,7 @@ namespace LastSon
         public Transform shoulderL, shoulderR, elbowL, elbowR;
         public Transform hipL, hipR, kneeL, kneeR;
         public Transform handL, handR, bootL, bootR;
+        public Transform eyeL, eyeR;      // heat vision beam origins
         public CapeSimulation cape;
     }
 
@@ -169,6 +170,8 @@ namespace LastSon
             }
             rig.head = Joint("Head", rig.neck, new Vector3(0f, 0.06f, 0f));
             BuildHead(rig.head);
+            rig.eyeL = Joint("EyeL", rig.head, new Vector3(-0.040f, 0.177f, 0.112f));
+            rig.eyeR = Joint("EyeR", rig.head, new Vector3(0.040f, 0.177f, 0.112f));
 
             // ----------------------------------------------------------------
             // Arms (bare hands; deltoid caps; bicep/forearm shaping)

@@ -3,11 +3,11 @@ using UnityEngine;
 namespace LastSon
 {
     /// <summary>
-    /// Superman flight: camera-relative WASD + Space/Ctrl vertical, hold
-    /// Shift for super-speed. Movement uses a CharacterController so
-    /// buildings and the ground are solid. The visual body pitches into the
-    /// direction of travel and banks through turns; red-blue speed trails
-    /// ignite at boost.
+    /// Superman locomotion: walking and super-sprinting on the ground,
+    /// full 3D flight in the air (camera-aim steering, Shift boost). Uses a
+    /// CharacterController so buildings and ground are solid. The visual body
+    /// pitches into travel, banks through turns, and spins during spin
+    /// attacks; speed trails ignite at boost/sprint.
     /// </summary>
     public class FlightController : MonoBehaviour
     {
@@ -15,19 +15,21 @@ namespace LastSon
         public Vector3 Velocity { get { return velocity; } }
         public float Speed { get { return velocity.magnitude; } }
         public bool Boosting { get; private set; }
+        [HideInInspector] public CombatSystem combat;
 
+        private const float WALK_SPEED = 7f;
+        private const float SPRINT_SPEED = 45f;
         private const float HOVER_SPEED = 14f;
         private const float CRUISE_SPEED = 42f;
         private const float BOOST_SPEED = 140f;
-        private const float WALK_SPEED = 6f;
-        private const float ACCEL = 3.0f;      // exponential approach rate
+        private const float ACCEL = 3.0f;
         private const float GRAVITY = 22f;
 
         private CharacterController cc;
         private SupermanRig rig;
         private CameraRig cam;
         private Vector3 velocity;
-        private float yVel;                    // grounded gravity
+        private float yVel;
         private bool grounded;
         private float bankAngle;
         private float lastYaw;
@@ -45,6 +47,12 @@ namespace LastSon
             trails[1] = MakeTrail(rig.handR, -0.09f);
             trails[2] = MakeTrail(rig.bootL, -0.46f);   // at the boot soles
             trails[3] = MakeTrail(rig.bootR, -0.46f);
+        }
+
+        /// <summary>External velocity change (attack lunges, knockback).</summary>
+        public void AddImpulse(Vector3 v)
+        {
+            velocity += v;
         }
 
         private TrailRenderer MakeTrail(Transform parent, float yOffset)
@@ -86,7 +94,9 @@ namespace LastSon
             float iy = 0f;
             if (Input.GetKey(KeyCode.Space)) iy += 1f;
             if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.C)) iy -= 1f;
-            Boosting = Input.GetKey(KeyCode.LeftShift) && (Mathf.Abs(ix) + Mathf.Abs(iz) + Mathf.Abs(iy) > 0.1f);
+            bool shift = Input.GetKey(KeyCode.LeftShift);
+            bool anyMove = Mathf.Abs(ix) + Mathf.Abs(iz) + Mathf.Abs(iy) > 0.1f;
+            Boosting = shift && anyMove && !grounded;
 
             // Camera-relative wish direction. While airborne, W follows the
             // camera's full 3D aim so you dive and climb by looking.
@@ -107,15 +117,12 @@ namespace LastSon
 
             // --- State & target speed ----------------------------------------
             float targetSpeed;
-            if (grounded && wish.sqrMagnitude < 0.01f && iy <= 0f)
+            if (grounded && iy <= 0f)
             {
-                State = MoveState.Grounded;
-                targetSpeed = 0f;
-            }
-            else if (grounded && iy <= 0f)
-            {
-                State = MoveState.Grounded;
-                targetSpeed = WALK_SPEED;
+                bool moving = wish.sqrMagnitude > 0.01f;
+                bool sprint = moving && shift;
+                State = !moving ? MoveState.Grounded : (sprint ? MoveState.Sprint : MoveState.Walk);
+                targetSpeed = !moving ? 0f : (sprint ? SPRINT_SPEED : WALK_SPEED);
             }
             else if (Boosting)
             {
@@ -137,10 +144,25 @@ namespace LastSon
             float k = 1f - Mathf.Exp(-ACCEL * dt);
             velocity = Vector3.Lerp(velocity, wish * targetSpeed, k);
 
+            // Idle hover just above the ground settles into a landing.
+            if (!grounded && State == MoveState.Hover && wish.sqrMagnitude < 0.01f)
+            {
+                RaycastHit gh;
+                if (Physics.Raycast(transform.position + Vector3.up * 0.1f, Vector3.down, out gh, 2.2f))
+                {
+                    velocity.y = Mathf.Max(velocity.y - 8f * dt, -2.5f);
+                }
+            }
+
             if (grounded)
             {
                 yVel -= GRAVITY * dt;
-                if (Input.GetKeyDown(KeyCode.Space)) { yVel = 0f; grounded = false; }
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    yVel = 0f;
+                    grounded = false;
+                    velocity.y = 7f;   // hop into the air
+                }
                 else velocity.y = yVel;
             }
 
@@ -148,18 +170,15 @@ namespace LastSon
             if ((flags & CollisionFlags.Below) != 0)
             {
                 yVel = 0f;
-                // Land only when descending gently; otherwise skim the ground.
                 if (velocity.y < 0f && Speed < 12f) grounded = true;
                 if (velocity.y < 0f) velocity.y = 0f;
             }
             else if (grounded)
             {
-                // Walked off an edge.
-                if (yVel < -8f) grounded = false;
+                if (yVel < -8f) grounded = false;   // walked off an edge
             }
             if ((flags & CollisionFlags.Sides) != 0 && Speed > 30f)
             {
-                // Clipped a building at speed: bleed it off.
                 velocity *= 0.35f;
                 if (cam != null) cam.Kick(0.5f);
             }
@@ -170,8 +189,9 @@ namespace LastSon
             // Feed the cape.
             if (rig.cape != null) rig.cape.BodyVelocity = velocity;
 
-            // Trails at boost.
-            bool trailsOn = State == MoveState.Boost && Speed > CRUISE_SPEED;
+            // Trails at boost / super-sprint.
+            bool trailsOn = (State == MoveState.Boost && Speed > CRUISE_SPEED) ||
+                            (State == MoveState.Sprint && Speed > WALK_SPEED * 2f);
             for (int i = 0; i < trails.Length; i++) trails[i].emitting = trailsOn;
         }
 
@@ -186,14 +206,19 @@ namespace LastSon
                 ? Mathf.Atan2(flat.x, flat.z) * Mathf.Rad2Deg
                 : cam.Yaw;
 
-            // Bank into turns.
+            // While attacking on the spot, square up to the camera aim.
+            if (combat != null && combat.Attacking && flat.sqrMagnitude <= 4f)
+                yaw = cam.Yaw;
+
+            // Bank into turns (airborne only).
             float yawRate = Mathf.DeltaAngle(lastYaw, yaw) / Mathf.Max(dt, 1e-4f);
             lastYaw = yaw;
-            float targetBank = Mathf.Clamp(-yawRate * 0.25f, -55f, 55f) * Mathf.Clamp01(speed / CRUISE_SPEED);
+            float bankScale = grounded ? 0.1f : 1f;
+            float targetBank = Mathf.Clamp(-yawRate * 0.25f, -55f, 55f)
+                             * Mathf.Clamp01(speed / CRUISE_SPEED) * bankScale;
             bankAngle = Mathf.Lerp(bankAngle, targetBank, 1f - Mathf.Exp(-4f * dt));
 
-            // Pitch into the velocity vector as speed builds: hover upright,
-            // cruise nearly horizontal (superman posture).
+            // Pitch into the velocity vector as speed builds.
             float pitch = 0f;
             if (State == MoveState.Cruise || State == MoveState.Boost)
             {
@@ -207,9 +232,13 @@ namespace LastSon
                 pitch = Mathf.Clamp(velocity.y * -0.6f, -14f, 14f);
             }
 
-            Quaternion target = Quaternion.Euler(0f, yaw, 0f)
+            // Spin attacks add yaw.
+            float spin = combat != null ? combat.SpinOffset : 0f;
+
+            Quaternion target = Quaternion.Euler(0f, yaw + spin, 0f)
                               * Quaternion.Euler(pitch, 0f, bankAngle);
-            vis.rotation = Quaternion.Slerp(vis.rotation, target, 1f - Mathf.Exp(-6f * dt));
+            float rotK = combat != null && combat.Attacking ? 14f : 6f;
+            vis.rotation = Quaternion.Slerp(vis.rotation, target, 1f - Mathf.Exp(-rotK * dt));
         }
     }
 }

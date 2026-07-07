@@ -2,13 +2,19 @@ using UnityEngine;
 
 namespace LastSon
 {
-    /// <summary>Minimal IMGUI overlay: speed, altitude, state, and a controls card.</summary>
+    /// <summary>
+    /// IMGUI overlay: speed/altitude/state, active-power indicators, combo
+    /// name popups, carrying prompt, and the controls card.
+    /// </summary>
     public class FlightHUD : MonoBehaviour
     {
         public FlightController controller;
+        public PowersController powers;
+        public CombatSystem combat;
+
         private bool showHelp = true;
         private Texture2D panelTex;
-        private GUIStyle label, big, help;
+        private GUIStyle label, big, help, combo;
 
         private void EnsureStyles()
         {
@@ -28,6 +34,12 @@ namespace LastSon
             help = new GUIStyle(label);
             help.fontSize = 14;
             help.normal.textColor = new Color(0.8f, 0.85f, 0.95f);
+
+            combo = new GUIStyle(label);
+            combo.fontSize = 30;
+            combo.fontStyle = FontStyle.Bold;
+            combo.alignment = TextAnchor.MiddleCenter;
+            combo.normal.textColor = new Color(1f, 0.85f, 0.35f);
         }
 
         private void Update()
@@ -48,10 +60,52 @@ namespace LastSon
             GUI.Label(new Rect(26, 52, 200, 22), string.Format("ALT  {0:0} m", alt), label);
             GUI.Label(new Rect(26, 72, 200, 22), controller.State.ToString().ToUpperInvariant(), label);
 
-            if (controller.Boosting)
+            // Active power indicators.
+            if (powers != null)
             {
-                GUI.Label(new Rect(Screen.width / 2f - 60, Screen.height * 0.82f, 200, 30),
-                    "MACH SPEED", big);
+                float py = 106;
+                if (powers.HeatActive)
+                {
+                    GUI.DrawTexture(new Rect(14, py, 130, 26), panelTex);
+                    GUI.Label(new Rect(26, py + 4, 130, 20), "HEAT VISION", label);
+                    py += 30;
+                }
+                if (powers.FreezeActive)
+                {
+                    GUI.DrawTexture(new Rect(14, py, 130, 26), panelTex);
+                    GUI.Label(new Rect(26, py + 4, 130, 20), "FREEZE BREATH", label);
+                    py += 30;
+                }
+                if (powers.XRayOn)
+                {
+                    GUI.DrawTexture(new Rect(14, py, 130, 26), panelTex);
+                    GUI.Label(new Rect(26, py + 4, 130, 20), "X-RAY VISION", label);
+                }
+                if (powers.Held != null)
+                {
+                    GUI.Label(new Rect(Screen.width / 2f - 150, Screen.height * 0.74f, 300, 30),
+                        "LMB  HURL      E  SET DOWN", combo);
+                }
+            }
+
+            if (controller.Boosting || controller.State == MoveState.Sprint)
+            {
+                GUI.Label(new Rect(Screen.width / 2f - 100, Screen.height * 0.82f, 200, 30),
+                    controller.State == MoveState.Sprint ? "SUPER SPRINT" : "MACH SPEED", big);
+            }
+
+            // Combo name popup.
+            if (combat != null && Time.time - combat.LastAttackTime < 0.8f &&
+                !string.IsNullOrEmpty(combat.LastAttackName))
+            {
+                float a = 1f - (Time.time - combat.LastAttackTime) / 0.8f;
+                Color c = combo.normal.textColor;
+                c.a = a;
+                combo.normal.textColor = c;
+                GUI.Label(new Rect(Screen.width / 2f - 150, Screen.height * 0.68f, 300, 36),
+                    combat.LastAttackName, combo);
+                c.a = 1f;
+                combo.normal.textColor = c;
             }
 
             // Crosshair dot.
@@ -59,15 +113,19 @@ namespace LastSon
 
             if (showHelp)
             {
-                GUI.DrawTexture(new Rect(14, Screen.height - 168, 320, 154), panelTex);
-                float y = Screen.height - 160;
-                GUI.Label(new Rect(26, y, 320, 20), "MOUSE - look / steer", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "W A S D - fly (W follows your aim)", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "SPACE / CTRL - ascend / descend", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "HOLD SHIFT - super-speed", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "SPACE near ground - take off / land", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "H - toggle help   ESC - release mouse", help); y += 20;
-                GUI.Label(new Rect(26, y, 320, 20), "Fan prototype - personal use only", help);
+                GUI.DrawTexture(new Rect(14, Screen.height - 248, 360, 234), panelTex);
+                float y = Screen.height - 240;
+                GUI.Label(new Rect(26, y, 360, 20), "MOUSE - look / steer", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "W A S D - move (airborne: W follows your aim)", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "SPACE / CTRL - up / down · SPACE - take off", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "SHIFT - boost (air) / super sprint (ground)", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "LMB - punch    RMB - kick   (chain combos!)", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "   P-P-P haymaker · P-P-K launcher · K-K spin", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "Q (hold) - heat vision at the crosshair", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "F (hold) - freeze breath · punch ice to shatter", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "X - x-ray vision    E - grab / set down props", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "H - toggle help · ESC - release mouse", help); y += 20;
+                GUI.Label(new Rect(26, y, 360, 20), "Fan prototype - personal use only", help);
             }
         }
     }

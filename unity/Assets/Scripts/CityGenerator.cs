@@ -68,6 +68,7 @@ namespace LastSon
                         var mr = b.GetComponent<MeshRenderer>();
                         mr.sharedMaterial = mats[rng.Next(mats.Length)];
                         mr.material.mainTextureScale = new Vector2(Mathf.Max(1f, w / 22f), Mathf.Max(1f, h / 34f));
+                        Registry.XRayOccluders.Add(mr);
 
                         // Rooftop clutter on larger towers.
                         if (h > 60f)
@@ -77,6 +78,7 @@ namespace LastSon
                             box.transform.position = new Vector3(cx + ox + w * 0.15f, h + 2.2f, cz + oz);
                             box.transform.localScale = new Vector3(w * 0.3f, 4.4f, d * 0.3f);
                             box.GetComponent<MeshRenderer>().sharedMaterial = roofMat;
+                            Registry.XRayOccluders.Add(box.GetComponent<MeshRenderer>());
                         }
                         if (h > 120f)
                         {
@@ -85,6 +87,7 @@ namespace LastSon
                             ant.transform.position = new Vector3(cx + ox, h + 9f, cz + oz);
                             ant.transform.localScale = new Vector3(1.2f, 18f, 1.2f);
                             ant.GetComponent<MeshRenderer>().sharedMaterial = roofMat;
+                            Registry.XRayOccluders.Add(ant.GetComponent<MeshRenderer>());
                         }
                     }
                 }
@@ -105,6 +108,7 @@ namespace LastSon
             var mr = tower.GetComponent<MeshRenderer>();
             mr.sharedMaterial = facade;
             mr.material.mainTextureScale = new Vector2(2f, 8f);
+            Registry.XRayOccluders.Add(mr);
 
             var crown = GameObject.CreatePrimitive(PrimitiveType.Cube);
             crown.transform.SetParent(parent, false);
