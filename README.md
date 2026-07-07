@@ -1,4 +1,13 @@
-# LAST SON — a fan-made Superman action game for Android
+# LAST SON — a fan-made Superman game experiment
+
+Two builds live in this repo:
+
+- **`/` (root)** — the original 2D Android action game (Kotlin, all five powers, kryptonite, missions — see below)
+- **`/unity`** — the PC/desktop 3D flight prototype in Unity, with a detailed procedural New 52-style Superman ([docs](unity/README.md))
+
+---
+
+# The Android game
 
 A fast-paced, fully interactive 2D Superman action game for Android phones,
 built as a **personal, non-commercial experiment** to answer one question:
