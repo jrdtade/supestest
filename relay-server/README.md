@@ -21,6 +21,18 @@ In the Unity multiplayer menu, use `127.0.0.1:7777` for local Editor testing.
 On Android devices, use the computer's LAN IP instead, for example
 `192.168.1.20:7777`.
 
+## Current Hosted Relay
+
+The game client is currently prefilled with the Railway TCP proxy:
+
+```text
+hayabusa.proxy.rlwy.net:53046
+```
+
+Railway project: `lastson-relay`
+Service: `lastson-relay`
+Internal application port: `8080`
+
 ## Deploy
 
 Deploy this folder to any Node 18+ host that exposes a raw TCP port to the

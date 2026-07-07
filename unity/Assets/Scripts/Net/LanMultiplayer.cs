@@ -45,6 +45,7 @@ namespace LastSon
         private const float PlayerTimeout = 6f;
 
         public const int DefaultRelayPort = 7777;
+        public const string DefaultRelayAddress = "hayabusa.proxy.rlwy.net:53046";
 
         public NetRole Role { get; private set; } = NetRole.Offline;
         public NetTransport Transport { get; private set; } = NetTransport.Lan;
@@ -53,7 +54,7 @@ namespace LastSon
         public IReadOnlyList<LobbyInfo> Lobbies => lobbyList;
 
         // Online (relay) surface for the menu.
-        public string RelayAddress = "";
+        public string RelayAddress = DefaultRelayAddress;
         public bool RelayConnected { get; private set; }
         public string RoomCode { get; private set; } = "";
         public IReadOnlyList<LobbyInfo> OnlineRooms => onlineRooms;
@@ -134,6 +135,8 @@ namespace LastSon
         // ------------------------------------------------------------------ //
         private void Awake()
         {
+            if (string.IsNullOrWhiteSpace(RelayAddress))
+                RelayAddress = DefaultRelayAddress;
             localId = Guid.NewGuid().ToString("N").Substring(0, 8);
             running = true;
             AcquireMulticastLock();
