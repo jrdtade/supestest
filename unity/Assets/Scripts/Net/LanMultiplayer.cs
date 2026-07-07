@@ -138,7 +138,6 @@ namespace LastSon
                 RelayAddress = DefaultRelayAddress;
             localId = Guid.NewGuid().ToString("N").Substring(0, 8);
             running = true;
-            AcquireMulticastLock();
             StartDiscoveryListener();
         }
 
@@ -211,7 +210,6 @@ namespace LastSon
             CloseSocket(ref gameSock);
             CloseSocket(ref beaconSock);
             CloseSocket(ref discoverySock);
-            ReleaseMulticastLock();
             DestroyAllGhosts();
         }
 
@@ -917,40 +915,5 @@ namespace LastSon
             sock = null;
         }
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-        private AndroidJavaObject multicastLock;
-#endif
-
-        /// <summary>
-        /// Android drops broadcast/multicast UDP by default; grabbing a Wi-Fi
-        /// MulticastLock lets the discovery socket actually receive lobby
-        /// beacons. No-op on other platforms (and harmless if it fails - the
-        /// menu's "join by IP" path still works).
-        /// </summary>
-        private void AcquireMulticastLock()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (var activity = new AndroidJavaClass("com.unity3d.player.UnityPlayer")
-                    .GetStatic<AndroidJavaObject>("currentActivity"))
-                using (var wifi = activity.Call<AndroidJavaObject>("getSystemService", "wifi"))
-                {
-                    multicastLock = wifi.Call<AndroidJavaObject>("createMulticastLock", "LastSonLobby");
-                    multicastLock.Call("setReferenceCounted", true);
-                    multicastLock.Call("acquire");
-                }
-            }
-            catch (Exception e) { Debug.LogWarning("[MP] multicast lock unavailable: " + e.Message); }
-#endif
-        }
-
-        private void ReleaseMulticastLock()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try { if (multicastLock != null) { multicastLock.Call("release"); multicastLock = null; } }
-            catch { }
-#endif
-        }
     }
 }
